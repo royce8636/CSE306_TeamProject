@@ -6,11 +6,31 @@
 #include <readline/history.h>
 #include <stdlib.h>
 
+void test(int client_socket)
+{
+	while (1)
+	{
+		// Receive user input from terminal
+		char input_buffer[1024];
+		printf("Enter data to send: ");
+		fgets(input_buffer, 1024, stdin);
+
+		// Send data to server
+		int bytes_sent = send(client_socket, input_buffer, strlen(input_buffer), 0);
+		if (bytes_sent < 0)
+		{
+			printf("Error sending data to server\n");
+			break;
+		}
+	}
+}
+
 void func(int client_socket)
 {
 	while (1)
 	{
-		char *input = readline("");
+		// char *input = readline("");
+		char *input;
 		if (input)
 		{
 			if (strcmp(input, "\033[A") == 0)
@@ -68,7 +88,8 @@ void send_data_to_server(int client_socket)
 	while (1)
 	{
 		// Read arrow keys as input from terminal
-		int ch = getch();
+		// int ch = getch();
+		int ch;
 		if (ch == KEY_UP)
 		{
 			// Send "UP" to server
@@ -145,17 +166,9 @@ int main(int argc, char *argv[])
 
 	puts("Connected\n");
 
-	// Send some data
-	message = "GET / HTTP/1.1\r\n\r\n";
-	if (send(socket_desc, message, strlen(message), 0) < 0)
-	{
-		puts("Send failed");
-		return 1;
-	}
-	puts("Data Send\n");
-
+	test(socket_desc);
 	// func(socket_desc);
-	send_data_to_server(socket_desc);
+	// send_data_to_server(socket_desc);
 
 	// Receive a reply from the server
 	if (recv(socket_desc, server_reply, 2000, 0) < 0)
