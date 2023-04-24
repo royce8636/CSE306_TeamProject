@@ -13,24 +13,29 @@
 #define PORT 8888
 #define TARGET_IP "192.168.1.33"
 
-// CTRL C로 프로그램 끝내면 socket다 닫고 끝내기
-void sigint_handler(int sig, int sockfd, int connfd)
+int sockfd;
+int old_flags = 0;
+struct termios old_term;
+
+// [Error Handler] CTRL C로 프로그램 끝내면 socket다 닫고 끝내기
+void sigint_handler(int sig)
 {
 	printf("Ending client\n");
-	close(connfd);
 	close(sockfd);
+	tcsetattr(STDIN_FILENO, TCSANOW, &old_term); // terminal 다시 원상복구
+	fcntl(STDIN_FILENO, F_SETFL, old_flags);
 	exit(0);
 }
 
 void get_arrows(int client_socket)
 {
-	struct termios old_term, new_term;
+	struct termios new_term;
 	tcgetattr(STDIN_FILENO, &old_term); // 현재 터미널 attribute
 	new_term = old_term;
 	new_term.c_lflag &= ~(ICANON | ECHO);		 // 터미널 canonical mode에 둠 (바로바로 input 가져옴)
 	tcsetattr(STDIN_FILENO, TCSANOW, &new_term); // 세팅 지금 적용
 
-	int old_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+	old_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, old_flags | O_NONBLOCK); // read() is non blocking
 
 	char buffer[3] = {0};
@@ -87,13 +92,12 @@ int main(int argc, char *argv[])
 {
 	signal(SIGINT, sigint_handler);
 
-	int socket_desc;
 	struct sockaddr_in server;
 	char *message, server_reply[2000];
 
 	// Create socket
-	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-	if (socket_desc == -1)
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd == -1)
 		printf("Could not create socket");
 
 	server.sin_addr.s_addr = inet_addr(TARGET_IP);
@@ -101,7 +105,7 @@ int main(int argc, char *argv[])
 	server.sin_port = htons(PORT);
 
 	// Connect to remote server
-	if (connect(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0)
+	if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
 	{
 		puts("connect error");
 		return 1;
@@ -109,7 +113,7 @@ int main(int argc, char *argv[])
 
 	puts("Connected\n");
 
-	get_arrows(socket_desc);
+	get_arrows(sockfd);
 
 	return 0;
 }

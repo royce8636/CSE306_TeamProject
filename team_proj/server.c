@@ -40,7 +40,7 @@ void func(int client_socket)
     int num;
     while (1)
     {
-        if (recv(client_socket, &num, sizeof(num), 0) < 0)
+        if (recv(client_socket, &num, sizeof(num), 0) <= 0) // 0이면 disconnected, -1은 잘못됨
         {
             printf("Wrong receive\n");
             break;
