@@ -5,12 +5,36 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <unistd.h> // read(), write(), close()
+#include <unistd.h>
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #define MAX 80
 #define PORT 8888
 #define SA struct sockaddr
 
-// Function designed for chat between client and server.
+void ip_print()
+{
+    struct ifaddrs *addrs, *tmp;
+    getifaddrs(&addrs);
+    tmp = addrs;
+    while (tmp)
+    {
+        if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET)
+        {
+            struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
+            if (strcmp(tmp->ifa_name, "lo") != 0)
+            {
+                printf("IP address of %s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
+            }
+        }
+        tmp = tmp->ifa_next;
+    }
+    freeifaddrs(addrs);
+}
+
+// Function designed to get int and decode them with cases.
 void func(int client_socket)
 {
     int num;
@@ -43,6 +67,9 @@ void func(int client_socket)
 // Driver function
 int main()
 {
+
+    ip_print();
+
     int sockfd, connfd, len;
     struct sockaddr_in servaddr, cli;
 

@@ -9,6 +9,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define PORT 8888
+#define TARGET_IP "192.168.1.33"
+
 void get_arrows(int client_socket)
 {
 	struct termios old_term, new_term;
@@ -81,9 +84,9 @@ int main(int argc, char *argv[])
 	if (socket_desc == -1)
 		printf("Could not create socket");
 
-	server.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server.sin_addr.s_addr = inet_addr(TARGET_IP);
 	server.sin_family = AF_INET;
-	server.sin_port = htons(8888);
+	server.sin_port = htons(PORT);
 
 	// Connect to remote server
 	if (connect(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0)
