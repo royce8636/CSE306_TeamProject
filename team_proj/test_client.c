@@ -3,7 +3,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
 #include <ncurses.h>
-#include <readline/history.h>
 #include <stdlib.h>
 
 void test(int client_socket)

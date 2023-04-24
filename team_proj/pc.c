@@ -2,144 +2,72 @@
 #include <string.h> //strlen
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
-#include <ncurses.h>
-#include <readline/history.h>
+// #include <ncurses.h>
+// #include <stdio.h>
+#include <termios.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-void test(int client_socket)
+void get_arrows(int client_socket)
 {
+	struct termios old_term, new_term;
+	tcgetattr(STDIN_FILENO, &old_term); // 현재 터미널 attribute
+	new_term = old_term;
+	new_term.c_lflag &= ~(ICANON | ECHO);		 // 터미널 canonical mode에 둠 (바로바로 input 가져옴)
+	tcsetattr(STDIN_FILENO, TCSANOW, &new_term); // 세팅 지금 적용
+
+	int old_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+	fcntl(STDIN_FILENO, F_SETFL, old_flags | O_NONBLOCK); // read() is non blocking
+
+	char buffer[3] = {0};
+	int to_send = -1;
+
 	while (1)
 	{
-		// Receive user input from terminal
-		char input_buffer[1024];
-		printf("Enter data to send: ");
-		fgets(input_buffer, 1024, stdin);
-
-		// Send data to server
-		int bytes_sent = send(client_socket, input_buffer, strlen(input_buffer), 0);
-		if (bytes_sent < 0)
+		to_send = -1;
+		if (read(STDIN_FILENO, buffer, 3) > 0)
 		{
-			printf("Error sending data to server\n");
-			break;
+			if (buffer[0] == 27 && buffer[1] == 91)
+			{
+				switch (buffer[2])
+				{
+				case 65: // Up arrow
+					printf("Up arrow pressed\n");
+					to_send = 0;
+					break;
+				case 66: // Down arrow
+					printf("Down arrow pressed\n");
+					to_send = 1;
+					break;
+				case 67: // Right arrow
+					printf("Right arrow pressed\n");
+					to_send = 2;
+					break;
+				case 68: // Left arrow
+					printf("Left arrow pressed\n");
+					to_send = 3;
+					break;
+				default:
+					break;
+				}
+				if (to_send >= 0)
+				{
+					if (send(client_socket, &to_send, sizeof(to_send), 0) < 0)
+					{
+						printf("Error sending data to server\n");
+						break;
+					}
+				}
+			}
+			memset(buffer, 0, sizeof(buffer));
 		}
+		usleep(100); // sleep 0.1 millisecond
 	}
-}
 
-void func(int client_socket)
-{
-	while (1)
-	{
-		// char *input = readline("");
-		char *input;
-		if (input)
-		{
-			if (strcmp(input, "\033[A") == 0)
-			{
-				// Send "UP" to server
-				int bytes_sent = send(client_socket, "UP", 2, 0);
-				if (bytes_sent < 0)
-				{
-					printf("Error sending data to server\n");
-					break;
-				}
-			}
-			else if (strcmp(input, "\033[B") == 0)
-			{
-				// Send "DOWN" to server
-				int bytes_sent = send(client_socket, "DOWN", 4, 0);
-				if (bytes_sent < 0)
-				{
-					printf("Error sending data to server\n");
-					break;
-				}
-			}
-			else if (strcmp(input, "\033[D") == 0)
-			{
-				// Send "LEFT" to server
-				int bytes_sent = send(client_socket, "LEFT", 4, 0);
-				if (bytes_sent < 0)
-				{
-					printf("Error sending data to server\n");
-					break;
-				}
-			}
-			else if (strcmp(input, "\033[C") == 0)
-			{
-				// Send "RIGHT" to server
-				int bytes_sent = send(client_socket, "RIGHT", 5, 0);
-				if (bytes_sent < 0)
-				{
-					printf("Error sending data to server\n");
-					break;
-				}
-			}
-			else if (strcmp(input, "q") == 0)
-			{
-				// Quit the program
-				break;
-			}
-			free(input);
-		}
-	}
-}
-
-void send_data_to_server(int client_socket)
-{
-	while (1)
-	{
-		// Read arrow keys as input from terminal
-		// int ch = getch();
-		int ch;
-		if (ch == KEY_UP)
-		{
-			// Send "UP" to server
-			int bytes_sent = send(client_socket, "UP", 2, 0);
-			printf("sending up\n");
-			if (bytes_sent < 0)
-			{
-				printf("Error sending data to server\n");
-				break;
-			}
-		}
-		else if (ch == KEY_DOWN)
-		{
-			// Send "DOWN" to server
-			int bytes_sent = send(client_socket, "DOWN", 4, 0);
-			printf("sending down\n");
-			if (bytes_sent < 0)
-			{
-				printf("Error sending data to server\n");
-				break;
-			}
-		}
-		else if (ch == KEY_LEFT)
-		{
-			// Send "LEFT" to server
-			int bytes_sent = send(client_socket, "LEFT", 4, 0);
-			printf("sending left\n");
-			if (bytes_sent < 0)
-			{
-				printf("Error sending data to server\n");
-				break;
-			}
-		}
-		else if (ch == KEY_RIGHT)
-		{
-			// Send "RIGHT" to server
-			int bytes_sent = send(client_socket, "RIGHT", 5, 0);
-			printf("sending right\n");
-			if (bytes_sent < 0)
-			{
-				printf("Error sending data to server\n");
-				break;
-			}
-		}
-		else if (ch == 'q')
-		{
-			// Quit the program
-			break;
-		}
-	}
+	// Restore terminal settings
+	tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
+	fcntl(STDIN_FILENO, F_SETFL, old_flags);
 }
 
 int main(int argc, char *argv[])
@@ -166,17 +94,7 @@ int main(int argc, char *argv[])
 
 	puts("Connected\n");
 
-	test(socket_desc);
-	// func(socket_desc);
-	// send_data_to_server(socket_desc);
-
-	// Receive a reply from the server
-	if (recv(socket_desc, server_reply, 2000, 0) < 0)
-	{
-		puts("recv failed");
-	}
-	puts("Reply received\n");
-	puts(server_reply);
+	get_arrows(socket_desc);
 
 	return 0;
 }

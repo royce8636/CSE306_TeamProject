@@ -11,21 +11,30 @@
 #define SA struct sockaddr
 
 // Function designed for chat between client and server.
-void func(int connfd)
+void func(int client_socket)
 {
-    char buff[MAX];
-    int n;
-    // infinite loop for chat
-    for (;;)
+    int num;
+    while (1)
     {
-        bzero(buff, MAX);
-
-        // read the message from client and copy it in buffer
-        read(connfd, buff, sizeof(buff));
-        printf("%s\n", buff);
-        if (strncmp("exit", buff, 4) == 0)
+        if (recv(client_socket, &num, sizeof(num), 0) < 0)
         {
-            printf("Server Exit...\n");
+            printf("Wrong receive\n");
+            break;
+        }
+        switch (num)
+        {
+        case 0:
+            printf("Arrow up\n");
+            // 차 컨트롤 넣기
+            break;
+        case 1:
+            printf("Arrow down\n");
+            break;
+        case 2:
+            printf("Arrow right\n");
+            break;
+        case 3:
+            printf("Arrow left\n");
             break;
         }
     }
@@ -90,5 +99,6 @@ int main()
     func(connfd);
 
     // After chatting close the socket
+    close(connfd);
     close(sockfd);
 }
