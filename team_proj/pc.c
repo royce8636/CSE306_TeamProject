@@ -8,9 +8,19 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define PORT 8888
 #define TARGET_IP "192.168.1.33"
+
+// CTRL C로 프로그램 끝내면 socket다 닫고 끝내기
+void sigint_handler(int sig, int sockfd, int connfd)
+{
+	printf("Ending client\n");
+	close(connfd);
+	close(sockfd);
+	exit(0);
+}
 
 void get_arrows(int client_socket)
 {
@@ -75,6 +85,8 @@ void get_arrows(int client_socket)
 
 int main(int argc, char *argv[])
 {
+	signal(SIGINT, sigint_handler);
+
 	int socket_desc;
 	struct sockaddr_in server;
 	char *message, server_reply[2000];
