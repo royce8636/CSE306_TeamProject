@@ -15,6 +15,7 @@
 #define HEIGHT 480
 #define QUALITY 90
 #define PORT 8080
+#define TARGET_IP ""
 
 int main()
 {
@@ -78,7 +79,7 @@ int main()
 
     struct sockaddr_in serv_addr = {0};
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    serv_addr.sin_addr.s_addr = inet_addr(TARGET_IP);
     serv_addr.sin_port = htons(PORT);
     if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
