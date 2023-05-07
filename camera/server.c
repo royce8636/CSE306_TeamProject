@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <jpeglib.h>
 
-#define PORT 8080
+#define PORT 8888
 #define BUFSIZE 65536
 
 int main()

@@ -10,12 +10,13 @@
 #include <netinet/in.h>
 #include <jpeglib.h>
 #include <linux/videodev2.h>
+#include <arpa/inet.h>
 
 #define WIDTH 640
 #define HEIGHT 480
 #define QUALITY 90
-#define PORT 8080
-#define TARGET_IP ""
+#define PORT 8888
+#define TARGET_IP "10.8.0.39"
 
 int main()
 {
@@ -78,15 +79,15 @@ int main()
     }
 
     struct sockaddr_in serv_addr = {0};
-    serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr(TARGET_IP);
+    serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
     if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
         perror("connect");
         exit(1);
     }
-
+    printf("Connected\n");
     struct jpeg_compress_struct cinfo = {0};
     struct jpeg_error_mgr jerr = {0};
     cinfo.err = jpeg_std_error(&jerr);
@@ -114,7 +115,8 @@ int main()
             outbuf[i * 3 + 1] = tmpbuf[i * 2 + 0];
             outbuf[i * 3 + 2] = 0;
         }
-        jpeg_mem_dest(&cinfo, &outbuf, &buf.bytesused);
+        unsigned long outsize = buf.bytesused;
+        jpeg_mem_dest(&cinfo, &outbuf, &outsize);
         jpeg_start_compress(&cinfo, TRUE);
         JSAMPROW row_pointer[1];
         while (cinfo.next_scanline < cinfo.image_height)
