@@ -16,7 +16,7 @@
 #define HEIGHT 480
 #define QUALITY 90
 #define PORT 8888
-#define TARGET_IP "10.8.0.39"
+#define TARGET_IP "10.0.2.15"
 
 int main()
 {
