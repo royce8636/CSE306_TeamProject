@@ -1,0 +1,45 @@
+#include <wiringPi.h>
+
+// Pin mapping for picar-v motor control
+#define MOTOR_A_EN_PIN 0
+#define MOTOR_B_EN_PIN 1
+#define MOTOR_A_IN1_PIN 2
+#define MOTOR_A_IN2_PIN 3
+#define MOTOR_B_IN1_PIN 4
+#define MOTOR_B_IN2_PIN 5
+
+int main(void) {
+    // Initialize wiringPi library
+    wiringPiSetup();
+
+    // Set motor control pins as output
+    pinMode(MOTOR_A_EN_PIN, OUTPUT);
+    pinMode(MOTOR_B_EN_PIN, OUTPUT);
+    pinMode(MOTOR_A_IN1_PIN, OUTPUT);
+    pinMode(MOTOR_A_IN2_PIN, OUTPUT);
+    pinMode(MOTOR_B_IN1_PIN, OUTPUT);
+    pinMode(MOTOR_B_IN2_PIN, OUTPUT);
+
+    // Set motor enable pins to high to start the motors
+    digitalWrite(MOTOR_A_EN_PIN, HIGH);
+    digitalWrite(MOTOR_B_EN_PIN, HIGH);
+
+    // Set motor direction pins to make the car go forward
+    digitalWrite(MOTOR_A_IN1_PIN, HIGH);
+    digitalWrite(MOTOR_A_IN2_PIN, LOW);
+    digitalWrite(MOTOR_B_IN1_PIN, HIGH);
+    digitalWrite(MOTOR_B_IN2_PIN, LOW);
+
+    // Keep the car moving forward for 5 seconds
+    delay(5000);
+
+    // Stop the car by setting all motor control pins to low
+    digitalWrite(MOTOR_A_EN_PIN, LOW);
+    digitalWrite(MOTOR_B_EN_PIN, LOW);
+    digitalWrite(MOTOR_A_IN1_PIN, LOW);
+    digitalWrite(MOTOR_A_IN2_PIN, LOW);
+    digitalWrite(MOTOR_B_IN1_PIN, LOW);
+    digitalWrite(MOTOR_B_IN2_PIN, LOW);
+
+    return 0;
+}
