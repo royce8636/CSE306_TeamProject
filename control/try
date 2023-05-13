@@ -1,28 +1,58 @@
-import RPi.GPIO as GPIO
-import time
+#include <stdio.h>
+#include <unistd.h>
+#include <bcm2835.h>
+#include "Adafruit_PWMServoDriver.h"
 
-# Set up GPIO pins
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(11, GPIO.OUT)
-GPIO.setup(13, GPIO.OUT)
-GPIO.setup(15, GPIO.OUT)
-GPIO.setup(16, GPIO.OUT)
+// Initialize the PWM driver with the I2C address and frequency
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, 50);
 
-# Move the car forward
-GPIO.output(11, GPIO.HIGH)
-GPIO.output(13, GPIO.LOW)
-GPIO.output(15, GPIO.HIGH)
-GPIO.output(16, GPIO.LOW)
+// Define the motor channels on the PWM driver
+#define LEFT_MOTOR 0
+#define RIGHT_MOTOR 1
 
-# Wait for a few seconds
-time.sleep(5)
+// Define the motor speeds
+#define LEFT_SPEED 4095
+#define RIGHT_SPEED 4095
 
-# Stop the car
-GPIO.output(11, GPIO.LOW)
-GPIO.output(13, GPIO.LOW)
-GPIO.output(15, GPIO.LOW)
-GPIO.output(16, GPIO.LOW)
+// Define the duration to run the motors in microseconds
+#define DURATION 500000
 
-# Clean up GPIO pins
-GPIO.cleanup()
+int main()
+{
+  // Initialize bcm2835 library and I2C communication
+  if (!bcm2835_init() || !pwm.begin())
+  {
+    printf("Error initializing bcm2835 and/or PCA9685.\n");
+    return 1;
+  }
 
+  // Set the motor frequencies and directions
+  pwm.setPWMFreq(50);
+  pwm.setPWM(LEFT_MOTOR, 0, 0);
+  pwm.setPWM(RIGHT_MOTOR, 0, 0);
+
+  // Enable the motors
+  pwm.setPin(LEFT_MOTOR, 1, 0);
+  pwm.setPin(RIGHT_MOTOR, 1, 0);
+
+  // Set the motor speeds
+  pwm.setPWM(LEFT_MOTOR, 0, LEFT_SPEED);
+  pwm.setPWM(RIGHT_MOTOR, 0, RIGHT_SPEED);
+
+  // Wait for the specified duration
+  usleep(DURATION);
+
+  // Stop the motors
+  pwm.setPWM(LEFT_MOTOR, 0, 0);
+  pwm.setPWM(RIGHT_MOTOR, 0, 0);
+
+  // Disable the motors
+  pwm.setPin(LEFT_MOTOR, 0, 0);
+  pwm.setPin(RIGHT_MOTOR, 0, 0);
+
+  // Close bcm2835 library and I2C communication
+  bcm2835_close();
+  pwm.end();
+
+  return 0;
+}
