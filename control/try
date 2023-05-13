@@ -1,44 +1,28 @@
-#include <bcm2835.h>
+import RPi.GPIO as GPIO
+import time
 
-// Motor 1 pins
-#define ENA 11
-#define IN1 13
-#define IN2 15
+# Set up GPIO pins
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(11, GPIO.OUT)
+GPIO.setup(13, GPIO.OUT)
+GPIO.setup(15, GPIO.OUT)
+GPIO.setup(16, GPIO.OUT)
 
-// Motor 2 pins
-#define ENB 16
-#define IN3 22
-#define IN4 23
+# Move the car forward
+GPIO.output(11, GPIO.HIGH)
+GPIO.output(13, GPIO.LOW)
+GPIO.output(15, GPIO.HIGH)
+GPIO.output(16, GPIO.LOW)
 
-int main() {
-  if (!bcm2835_init()) {
-    printf("Error initializing BCM2835 library!\n");
-    return 1;
-  }
+# Wait for a few seconds
+time.sleep(5)
 
-  // Set all motor pins as outputs
-  bcm2835_gpio_fsel(ENA, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(IN1, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(IN2, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(ENB, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(IN3, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(IN4, BCM2835_GPIO_FSEL_OUTP);
+# Stop the car
+GPIO.output(11, GPIO.LOW)
+GPIO.output(13, GPIO.LOW)
+GPIO.output(15, GPIO.LOW)
+GPIO.output(16, GPIO.LOW)
 
-  // Set motor 1 enable pin high to enable the motor
-  bcm2835_gpio_write(ENA, HIGH);
-
-  // Set motor 1 direction pins to move forward
-  bcm2835_gpio_write(IN1, HIGH);
-  bcm2835_gpio_write(IN2, LOW);
-
-  // Set motor 2 enable pin high to enable the motor
-  bcm2835_gpio_write(ENB, HIGH);
-
-  // Set motor 2 direction pins to move forward
-  bcm2835_gpio_write(IN3, HIGH);
-  bcm2835_gpio_write(IN4, LOW);
-
-  bcm2835_close();
-  return 0;
-}
+# Clean up GPIO pins
+GPIO.cleanup()
 
