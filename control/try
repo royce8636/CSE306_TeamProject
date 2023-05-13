@@ -1,45 +1,50 @@
-#include <wiringPi.h>
+import RPi.GPIO as GPIO
+import time
 
-// Pin mapping for picar-v motor control
-#define MOTOR_A_EN_PIN 0
-#define MOTOR_B_EN_PIN 1
-#define MOTOR_A_IN1_PIN 2
-#define MOTOR_A_IN2_PIN 3
-#define MOTOR_B_IN1_PIN 4
-#define MOTOR_B_IN2_PIN 5
+# Define the motor control pins
+AIN1 = 2
+AIN2 = 3
+STBY = 4
+BIN1 = 17
+BIN2 = 27
 
-int main(void) {
-    // Initialize wiringPi library
-    wiringPiSetup();
+# Define the motor speeds
+LEFT_SPEED = 50
+RIGHT_SPEED = 50
 
-    // Set motor control pins as output
-    pinMode(MOTOR_A_EN_PIN, OUTPUT);
-    pinMode(MOTOR_B_EN_PIN, OUTPUT);
-    pinMode(MOTOR_A_IN1_PIN, OUTPUT);
-    pinMode(MOTOR_A_IN2_PIN, OUTPUT);
-    pinMode(MOTOR_B_IN1_PIN, OUTPUT);
-    pinMode(MOTOR_B_IN2_PIN, OUTPUT);
+# Define the duration to run the motors in seconds
+DURATION = 5
 
-    // Set motor enable pins to high to start the motors
-    digitalWrite(MOTOR_A_EN_PIN, HIGH);
-    digitalWrite(MOTOR_B_EN_PIN, HIGH);
+# Set up the GPIO pins
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(AIN1, GPIO.OUT)
+GPIO.setup(AIN2, GPIO.OUT)
+GPIO.setup(STBY, GPIO.OUT)
+GPIO.setup(BIN1, GPIO.OUT)
+GPIO.setup(BIN2, GPIO.OUT)
+GPIO.output(STBY, GPIO.HIGH)
 
-    // Set motor direction pins to make the car go forward
-    digitalWrite(MOTOR_A_IN1_PIN, HIGH);
-    digitalWrite(MOTOR_A_IN2_PIN, LOW);
-    digitalWrite(MOTOR_B_IN1_PIN, HIGH);
-    digitalWrite(MOTOR_B_IN2_PIN, LOW);
+# Set the motor directions to go forward
+GPIO.output(AIN1, GPIO.HIGH)
+GPIO.output(AIN2, GPIO.LOW)
+GPIO.output(BIN1, GPIO.HIGH)
+GPIO.output(BIN2, GPIO.LOW)
 
-    // Keep the car moving forward for 5 seconds
-    delay(5000);
+# Set the motor speeds
+left_pwm = GPIO.PWM(AIN1, 100)
+right_pwm = GPIO.PWM(BIN1, 100)
+left_pwm.start(LEFT_SPEED)
+right_pwm.start(RIGHT_SPEED)
 
-    // Stop the car by setting all motor control pins to low
-    digitalWrite(MOTOR_A_EN_PIN, LOW);
-    digitalWrite(MOTOR_B_EN_PIN, LOW);
-    digitalWrite(MOTOR_A_IN1_PIN, LOW);
-    digitalWrite(MOTOR_A_IN2_PIN, LOW);
-    digitalWrite(MOTOR_B_IN1_PIN, LOW);
-    digitalWrite(MOTOR_B_IN2_PIN, LOW);
+# Wait for the specified duration
+time.sleep(DURATION)
 
-    return 0;
-}
+# Stop the motors
+left_pwm.stop()
+right_pwm.stop()
+
+# Disable the motors
+GPIO.output(STBY, GPIO.LOW)
+
+# Clean up the GPIO pins
+GPIO.cleanup()
