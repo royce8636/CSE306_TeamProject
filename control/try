@@ -1,67 +1,44 @@
-#include <stdio.h>
 #include <bcm2835.h>
 
-// Define the motor control pins
-#define AIN1 RPI_GPIO_P1_3
-#define AIN2 RPI_GPIO_P1_5
-#define STBY RPI_GPIO_P1_7
-#define BIN1 RPI_GPIO_P1_11
-#define BIN2 RPI_GPIO_P1_13
+// Motor 1 pins
+#define ENA 11
+#define IN1 13
+#define IN2 15
 
-// Define the motor speeds
-#define LEFT_SPEED 150
-#define RIGHT_SPEED 150
+// Motor 2 pins
+#define ENB 16
+#define IN3 22
+#define IN4 23
 
-// Define the duration to run the motors in milliseconds
-#define DURATION 5000
-
-int main()
-{
-  // Initialize bcm2835 library
-  if (!bcm2835_init())
-  {
-    printf("Error initializing bcm2835.\n");
+int main() {
+  if (!bcm2835_init()) {
+    printf("Error initializing BCM2835 library!\n");
     return 1;
   }
 
-  // Set the motor control pins as outputs
-  bcm2835_gpio_fsel(AIN1, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(AIN2, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(STBY, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(BIN1, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_fsel(BIN2, BCM2835_GPIO_FSEL_OUTP);
+  // Set all motor pins as outputs
+  bcm2835_gpio_fsel(ENA, BCM2835_GPIO_FSEL_OUTP);
+  bcm2835_gpio_fsel(IN1, BCM2835_GPIO_FSEL_OUTP);
+  bcm2835_gpio_fsel(IN2, BCM2835_GPIO_FSEL_OUTP);
+  bcm2835_gpio_fsel(ENB, BCM2835_GPIO_FSEL_OUTP);
+  bcm2835_gpio_fsel(IN3, BCM2835_GPIO_FSEL_OUTP);
+  bcm2835_gpio_fsel(IN4, BCM2835_GPIO_FSEL_OUTP);
 
-  // Enable the motors
-  bcm2835_gpio_write(STBY, HIGH);
+  // Set motor 1 enable pin high to enable the motor
+  bcm2835_gpio_write(ENA, HIGH);
 
-  // Set the motor directions to go forward
-  bcm2835_gpio_write(AIN1, HIGH);
-  bcm2835_gpio_write(AIN2, LOW);
-  bcm2835_gpio_write(BIN1, HIGH);
-  bcm2835_gpio_write(BIN2, LOW);
+  // Set motor 1 direction pins to move forward
+  bcm2835_gpio_write(IN1, HIGH);
+  bcm2835_gpio_write(IN2, LOW);
 
-  // Set the motor speeds
-  bcm2835_pwm_set_clock(BCM2835_PWM_CLOCK_DIVIDER_16);
-  bcm2835_pwm_set_mode(0, 1, 1);
-  bcm2835_pwm_set_mode(1, 1, 1);
-  bcm2835_pwm_set_range(0, 100);
-  bcm2835_pwm_set_range(1, 100);
-  bcm2835_pwm_set_data(0, LEFT_SPEED);
-  bcm2835_pwm_set_data(1, RIGHT_SPEED);
+  // Set motor 2 enable pin high to enable the motor
+  bcm2835_gpio_write(ENB, HIGH);
 
-  // Wait for the specified duration
-  bcm2835_delay(DURATION);
+  // Set motor 2 direction pins to move forward
+  bcm2835_gpio_write(IN3, HIGH);
+  bcm2835_gpio_write(IN4, LOW);
 
-  // Stop the motors
-  bcm2835_pwm_set_data(0, 0);
-  bcm2835_pwm_set_data(1, 0);
-
-  // Disable the motors
-  bcm2835_gpio_write(STBY, LOW);
-
-  // Close bcm2835 library
   bcm2835_close();
-
   return 0;
 }
 
