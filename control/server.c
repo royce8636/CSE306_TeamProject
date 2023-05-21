@@ -9,6 +9,8 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <fcntl.h>
+#include <linux/i2c-dev.h>
 
 #define PORT 8888
 #define SA struct sockaddr
@@ -34,10 +36,27 @@ void ip_print()
     freeifaddrs(addrs);
 }
 
+void write_i2c_block_data(int file, int addr, int reg, int size, int *data)
+{
+    unsigned char buffer[size + 1];
+    buffer[0] = reg;
+    for (int i = 0; i < size; i++)
+    {
+        buffer[i + 1] = (unsigned char)data[i];
+    }
+    if (write(file, buffer, size + 1) != size + 1)
+    {
+        printf("Failed to write data to I2C device.\n");
+        exit(1);
+    }
+}
+
 // Function designed to get int and decode them with cases.
-void func(int client_socket)
+void func(int client_socket, int file, int addr)
 {
     int num;
+    int reg = 0x01;
+    int data[4] = {0};
     while (1)
     {
         if (recv(client_socket, &num, sizeof(num), 0) <= 0) // 0이면 disconnected, -1은 잘못됨
@@ -49,16 +68,23 @@ void func(int client_socket)
         {
         case 0:
             printf("Arrow up\n");
-            // 차 컨트롤 넣기
+            int data[4] = {1, 80, 1, 80};
+            write_i2c_block_data(file, addr, reg, 4, data);
             break;
         case 1:
             printf("Arrow down\n");
+            int data[4] = {0, 80, 0, 80};
+            write_i2c_block_data(file, addr, reg, 4, data);
             break;
         case 2:
             printf("Arrow right\n");
+            int data[4] = {1, 50, 1, 80};
+            write_i2c_block_data(file, addr, reg, 4, data);
             break;
         case 3:
             printf("Arrow left\n");
+            int data[4] = {1, 80, 1, 50};
+            write_i2c_block_data(file, addr, reg, 4, data);
             break;
         }
     }
@@ -67,7 +93,26 @@ void func(int client_socket)
 // Driver function
 int main()
 {
+    // CAR CONNECTION
+    int file;
+    char *filename = "/dev/i2c-1";
+    int addr = 0x16;
 
+    if ((file = open(filename, O_RDWR)) < 0)
+    {
+        printf("Failed to open the bus.\n");
+        return 1;
+    }
+
+    if (ioctl(file, I2C_SLAVE, addr) < 0)
+    {
+        printf("Failed to acquire bus access and/or talk to slave.\n");
+        return 1;
+    }
+
+    pritnf("Car connection successful");
+
+    // IP CONNECTION
     ip_print();
 
     int sockfd, connfd, len;
@@ -123,7 +168,7 @@ int main()
         printf("server accept the client...\n");
 
     // Function for chatting between client and server
-    func(connfd);
+    func(connfd, file, addr);
 
     // After chatting close the socket
     close(connfd);
