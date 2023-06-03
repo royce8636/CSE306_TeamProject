@@ -110,7 +110,7 @@ int main()
         return 1;
     }
 
-    pritnf("Car connection successful");
+    pritnf("Car connection successful\n");
 
     // IP CONNECTION
     ip_print();
