@@ -32,7 +32,7 @@ void sigint_handler(int sig)
 	exit(0);
 }
 
-void linux_like_control(){
+void* linux_like_control(){
 	FILE* file;
 	DIR *dir;
 	struct dirent *entry;
