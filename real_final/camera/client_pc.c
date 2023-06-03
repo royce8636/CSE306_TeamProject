@@ -14,6 +14,13 @@
 #define PORT 8888
 #define IP_ADDR "172.20.10.8"
 
+void destroy_all(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture)
+{
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+}
+
 int main()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -53,31 +60,25 @@ int main()
     if (clientSocket == -1)
     {
         perror("Failed to create socket");
-        SDL_DestroyTexture(texture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
+        destroy_all(window, renderer, texture);
         SDL_Quit();
         return 1;
     }
 
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT); // Use the same port as the server
+    serverAddr.sin_port = htons(PORT);
     if (inet_pton(AF_INET, IP_ADDR, &(serverAddr.sin_addr)) <= 0)
     {
         perror("Invalid server IP address");
-        SDL_DestroyTexture(texture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
+        destroy_all(window, renderer, texture);
         SDL_Quit();
         return 1;
     }
     if (connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
     {
         perror("Failed to connect to the server");
-        SDL_DestroyTexture(texture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
+        destroy_all(window, renderer, texture);
         SDL_Quit();
         return 1;
     }
@@ -88,14 +89,12 @@ int main()
     clock_t start_time = clock();
     clock_t prev_time = start_time;
 
-    // Main loop
     bool quit = false;
     while (!quit)
     {
         struct jpeg_decompress_struct cinfo;
         struct jpeg_error_mgr jerr;
 
-        // Initialize libjpeg decompression objects
         cinfo.err = jpeg_std_error(&jerr);
         jpeg_create_decompress(&cinfo);
         SDL_Event event;
@@ -110,14 +109,12 @@ int main()
         uint32_t frameSize = 0;
         ssize_t bytesRead = recv(clientSocket, &frameSize, sizeof(frameSize), 0);
 
-        // // Allocate the buffer dynamically based on the frame size
         unsigned char *buffer = (unsigned char *)malloc(frameSize);
         if (!buffer)
         {
             perror("Failed to allocate memory for the buffer");
         }
 
-        // / Receive the frame data from the server
         ssize_t totalBytesReceived = 0;
         while (totalBytesReceived < frameSize)
         {
@@ -137,7 +134,6 @@ int main()
             }
             else if (bytesRead == 0)
             {
-                // Connection closed by the server
                 free(buffer);
                 break;
             }
@@ -165,14 +161,10 @@ int main()
         jpeg_finish_decompress(&cinfo);
         jpeg_destroy_decompress(&cinfo);
 
-        // printf("before updating SDL\n");
-
-        // Update the texture with the new frame data
         SDL_UpdateTexture(texture, NULL, rgbBuffer, cinfo.output_width * cinfo.output_components);
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
-        // SDL_Delay(20);
         free(rgbBuffer);
         free(buffer);
 
@@ -189,11 +181,8 @@ int main()
         }
     }
 
-    // Clean up resources
     close(clientSocket);
-    SDL_DestroyTexture(texture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    destroy_all(window, renderer, texture);
     SDL_Quit();
 
     return 0;
