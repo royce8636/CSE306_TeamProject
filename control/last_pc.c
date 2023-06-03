@@ -87,7 +87,7 @@ void linux_like_control(){
                     fclose(file);
                     file = fopen("right","w");
                     fclose(file);
-                    file = fopen("foward","w");
+                    file = fopen("forward","w");
                     fclose(file);
                     file = fopen("back","w");
                     fclose(file);
