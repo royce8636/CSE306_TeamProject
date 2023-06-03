@@ -105,7 +105,7 @@ void* linux_like_control(){
 			}
 		}
 		else{
-			printf("Invalid input format.\n");
+			printf("Invalid input formaf.\n");
 		}
 	}
 }
@@ -188,7 +188,7 @@ void get_arrows(int client_socket)
 }
 
 int main(int argc, char *argv[])
-{
+{	
 	signal(SIGINT, sigint_handler);
 	pthread_t thread_id;
 	struct sockaddr_in server;
@@ -210,12 +210,14 @@ int main(int argc, char *argv[])
 	}
 
 	puts("Connected\n");
-	int status = pthread_create(&thread_id, NULL, linux_like_control, NULL);
-	if (status != 0) {
-        printf("Failed to create thread.\n");
-        return 1;
-    }
-	get_arrows(sockfd);
-
+	if(strcmp(argv[1],"easy") == 0){
+		get_arrows(sockfd);	
+	}
+	else if(strcmp(argv[1],"hard") == 0){
+		linux_like_control();
+	}
+	else{
+		printf("invalid input\n");
+	}
 	return 0;
 }
