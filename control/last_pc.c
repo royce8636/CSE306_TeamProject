@@ -15,7 +15,7 @@
 #include <libgen.h>
 
 #define PORT 8888
-#define TARGET_IP "172.20.10.6"
+#define TARGET_IP "172.20.10.9"
 
 int sockfd;
 int old_flags = 0;
@@ -32,7 +32,7 @@ void sigint_handler(int sig)
 	exit(0);
 }
 
-void* linux_like_control(){
+void linux_like_control(){
 	FILE* file;
 	DIR *dir;
 	struct dirent *entry;
@@ -42,16 +42,16 @@ void* linux_like_control(){
     	fgets(string, sizeof(string),stdin);
 
 		if(strncmp(string,"./left",6) == 0){
-			to_send = 2;	
+			to_send = 3;	
 		}
 		else if(strncmp(string,"./right",7) == 0){
-			to_send = 1;
+			to_send = 2;
 		}
 		else if(strncmp(string,"./forward",9) == 0){
 			to_send = 0;
 		}
 		else if(strncmp(string,"./back",6) == 0){
-			to_send = 3;
+			to_send = 1;
 		}
 		if(strncmp(string,"./stop",6) == 0){
 			to_send = 4;
