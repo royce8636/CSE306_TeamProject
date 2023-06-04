@@ -2,8 +2,6 @@
 #include <string.h> //strlen
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
-// #include <ncurses.h>
-// #include <stdio.h>
 #include <termios.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -24,10 +22,10 @@ struct termios old_term;
 // [Error Handler] CTRL C로 프로그램 끝내면 socket다 닫고 끝내기
 void sigint_handler(int sig)
 {
-	printf("Ending client\n");
 	close(sockfd);
 	tcsetattr(STDIN_FILENO, TCSANOW, &old_term); // terminal 다시 원상복구
 	fcntl(STDIN_FILENO, F_SETFL, old_flags);
+	printf("Ending client\n");
 	exit(0);
 }
 
