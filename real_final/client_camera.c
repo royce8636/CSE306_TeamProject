@@ -12,7 +12,7 @@
 #define WIDTH 1280
 #define HEIGHT 800
 #define PORT 8888
-#define IP_ADDR "172.20.10.8"
+#define IP_ADDR "172.20.10.11"
 
 void destroy_all(SDL_Window *window, SDL_Renderer *renderer, SDL_Texture *texture)
 {
@@ -187,4 +187,3 @@ int main()
 
     return 0;
 }
-
