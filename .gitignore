@@ -1,6 +1,5 @@
 *.o
 a.out
-server
 pc
 .*
 !/.gitignore
