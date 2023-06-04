@@ -14,13 +14,12 @@
 #include <sys/stat.h>
 #include <libgen.h>
 
-#define PORT 8888
-#define TARGET_IP "172.20.10.9"
+#define PORT 5000
+#define TARGET_IP "172.20.10.11"
 
 int sockfd;
 int old_flags = 0;
 struct termios old_term;
-
 
 // [Error Handler] CTRL C로 프로그램 끝내면 socket다 닫고 끝내기
 void sigint_handler(int sig)
@@ -32,85 +31,100 @@ void sigint_handler(int sig)
 	exit(0);
 }
 
-void linux_like_control(){
-	FILE* file;
+void linux_like_control()
+{
+	FILE *file;
 	DIR *dir;
 	struct dirent *entry;
-	while(1){
+	while (1)
+	{
 		int to_send = -1;
 		char string[100]; // Declare a character array to store the input string
-    	fgets(string, sizeof(string),stdin);
+		fgets(string, sizeof(string), stdin);
 
-		if(strncmp(string,"./left",6) == 0){
-			to_send = 3;	
+		if (strncmp(string, "./left", 6) == 0)
+		{
+			to_send = 3;
 		}
-		else if(strncmp(string,"./right",7) == 0){
+		else if (strncmp(string, "./right", 7) == 0)
+		{
 			to_send = 2;
 		}
-		else if(strncmp(string,"./forward",9) == 0){
+		else if (strncmp(string, "./forward", 9) == 0)
+		{
 			to_send = 0;
 		}
-		else if(strncmp(string,"./back",6) == 0){
+		else if (strncmp(string, "./back", 6) == 0)
+		{
 			to_send = 1;
 		}
-		if(strncmp(string,"./stop",6) == 0){
+		if (strncmp(string, "./stop", 6) == 0)
+		{
 			to_send = 4;
 		}
-		if (to_send >= 0){
+		if (to_send >= 0)
+		{
 			if (send(sockfd, &to_send, sizeof(to_send), 0) < 0)
 			{
-				printf("Error sending data to server\n");						
+				printf("Error sending data to server\n");
 			}
 			continue;
 		}
 
-		if(strncmp(string,"ls",2) == 0){
+		if (strncmp(string, "ls", 2) == 0)
+		{
 			dir = opendir(".");
-			if(dir == NULL){
+			if (dir == NULL)
+			{
 				perror("Unable to open directory");
 			}
-			while ((entry = readdir(dir)) != NULL) {
-        		printf("%s ", entry->d_name);
-    		}
+			while ((entry = readdir(dir)) != NULL)
+			{
+				printf("%s ", entry->d_name);
+			}
 			closedir(dir);
 			printf("\n");
 			continue;
 		}
 		char str1[50], str2[50];
 
-		if(sscanf(string,"%s %s", str1, str2) == 2) {
-			if(strcmp(str1,"mkdir") == 0){
-				int status = mkdir(str2,0777);
-				if(strcmp(str2,"move") == 0){
-                    chdir(str2);
-                    file = fopen("left","w");
-                    fclose(file);
-                    file = fopen("right","w");
-                    fclose(file);
-                    file = fopen("forward","w");
-                    fclose(file);
-                    file = fopen("back","w");
-                    fclose(file);
-                    file = fopen("stop","w");
-                    fclose(file);
+		if (sscanf(string, "%s %s", str1, str2) == 2)
+		{
+			if (strcmp(str1, "mkdir") == 0)
+			{
+				int status = mkdir(str2, 0777);
+				if (strcmp(str2, "move") == 0)
+				{
+					chdir(str2);
+					file = fopen("left", "w");
+					fclose(file);
+					file = fopen("right", "w");
+					fclose(file);
+					file = fopen("forward", "w");
+					fclose(file);
+					file = fopen("back", "w");
+					fclose(file);
+					file = fopen("stop", "w");
+					fclose(file);
 					chdir("..");
-                }
+				}
 			}
-			else if(strcmp(str1,"cd") == 0){
-				if(strcmp(str2,"parent") == 0){
-                    chdir("..");
-                    continue;
-                }
+			else if (strcmp(str1, "cd") == 0)
+			{
+				if (strcmp(str2, "parent") == 0)
+				{
+					chdir("..");
+					continue;
+				}
 				int status = chdir(str2);
 			}
 		}
-		else{
+		else
+		{
 			printf("Invalid input formaf.\n");
 		}
 	}
 }
-
-
 
 void get_arrows(int client_socket)
 {
@@ -163,10 +177,10 @@ void get_arrows(int client_socket)
 					}
 				}
 			}
-			else if(buffer[0]==32)
+			else if (buffer[0] == 32)
 			{
 				printf("Space pressed\n");
-				to_send=4;
+				to_send = 4;
 				if (to_send >= 0)
 				{
 					if (send(client_socket, &to_send, sizeof(to_send), 0) < 0)
@@ -178,8 +192,7 @@ void get_arrows(int client_socket)
 			}
 		}
 		memset(buffer, 0, sizeof(buffer));
-		
-	
+
 		usleep(100); // sleep 0.1 millisecond
 	}
 	// Restore terminal settings
@@ -188,7 +201,7 @@ void get_arrows(int client_socket)
 }
 
 int main(int argc, char *argv[])
-{	
+{
 	signal(SIGINT, sigint_handler);
 	pthread_t thread_id;
 	struct sockaddr_in server;
@@ -210,13 +223,16 @@ int main(int argc, char *argv[])
 	}
 
 	puts("Connected\n");
-	if(strcmp(argv[1],"easy") == 0){
-		get_arrows(sockfd);	
+	if (strcmp(argv[1], "easy") == 0)
+	{
+		get_arrows(sockfd);
 	}
-	else if(strcmp(argv[1],"hard") == 0){
+	else if (strcmp(argv[1], "hard") == 0)
+	{
 		linux_like_control();
 	}
-	else{
+	else
+	{
 		printf("invalid input\n");
 	}
 	return 0;

@@ -18,11 +18,27 @@
 
 #define PORT 8888
 #define SA struct sockaddr
-#define Trig    4
-#define Echo    5
+#define Trig 4
+#define Echo 5
 #define BUZZER_PIN 26
 
-int data[4] = {0,0,0,0}; // adjust speed
+int data[4] = {0, 0, 0, 0}; // adjust speed
+
+void stop_exit()
+{
+    data[0] = 0;
+    data[1] = 0;
+    data[2] = 1;
+    data[3] = 0;
+    write_i2c_block_data(file, addr, reg, 4, data);
+    printf("Goodbye!\n");
+    exit(0);
+}
+
+void sigint_handler(int sig)
+{
+    stop_exit();
+}
 
 void ultraInit(void)
 {
@@ -44,40 +60,46 @@ int getCM(void)
     delayMicroseconds(10);
     digitalWrite(Trig, LOW);
 
-    while(!(digitalRead(Echo) == 1));
+    while (!(digitalRead(Echo) == 1))
+        ;
     gettimeofday(&tv1, NULL);
 
-    while(!(digitalRead(Echo) == 0));
+    while (!(digitalRead(Echo) == 0))
+        ;
     gettimeofday(&tv2, NULL);
 
     start = tv1.tv_sec * 1000000 + tv1.tv_usec;
-    stop  = tv2.tv_sec * 1000000 + tv2.tv_usec;
+    stop = tv2.tv_sec * 1000000 + tv2.tv_usec;
 
     dis = (float)(stop - start) / 58.00;
     return (int)dis;
 }
 
-void *thread(void *vargp){
-    while(1){        
+void *thread(void *vargp)
+{
+    while (1)
+    {
         int distance = getCM();
-        if(distance < 50){
-            pwmWrite(BUZZER_PIN, 50); //buzzer sounds
-            delay(50); // Sound duration
-            pwmWrite(BUZZER_PIN, 0); //buzzer quiet.
-            delay(20 * distance); // Delay between sounds, shorter delay when closer
-            if(distance < 20){
+        if (distance < 50)
+        {
+            pwmWrite(BUZZER_PIN, 50); // buzzer sounds
+            delay(50);                // Sound duration
+            pwmWrite(BUZZER_PIN, 0);  // buzzer quiet.
+            delay(20 * distance);     // Delay between sounds, shorter delay when closer
+            if (distance < 20)
+            {
                 data[0] = 0;
                 data[1] = 0;
                 data[2] = 1;
                 data[3] = 0;
             }
         }
-        else{
-            pwmWrite(BUZZER_PIN, 0); //buzzer quiet.
+        else
+        {
+            pwmWrite(BUZZER_PIN, 0); // buzzer quiet.
         }
     }
 }
-
 
 // 여기서 출력된 IP address 보고 client에 TARGET_IP 수정
 void ip_print()
@@ -126,6 +148,7 @@ void func(int client_socket, int file, int addr)
         if (recv(client_socket, &num, sizeof(num), 0) <= 0) // 0이면 disconnected, -1은 잘못됨
         {
             printf("Wrong receive\n");
+            stop_exit();
             break;
         }
         switch (num)
@@ -177,8 +200,11 @@ void func(int client_socket, int file, int addr)
 // Driver function
 int main()
 {
+    // Set up sigint handler
+    signal(SIGINT, sigint_handler);
     // CAR CONNECTION
-    if(wiringPiSetup() == -1){
+    if (wiringPiSetup() == -1)
+    {
         printf("setup wiringPi failed !");
         exit(1);
     }
@@ -219,7 +245,7 @@ int main()
     if (sockfd == -1)
     {
         printf("socket creation failed...\n");
-        exit(0);
+        stop_exit();
     }
 
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
@@ -238,7 +264,7 @@ int main()
     if ((bind(sockfd, (SA *)&servaddr, sizeof(servaddr))) != 0)
     {
         printf("socket bind failed...\n");
-        exit(0);
+        stop_exit();
     }
     else
         printf("Socket successfully binded..\n");
@@ -247,7 +273,7 @@ int main()
     if ((listen(sockfd, 5)) != 0)
     {
         printf("Listen failed...\n");
-        exit(0);
+        stop_exit();
     }
     else
         printf("Server listening..\n");
@@ -258,14 +284,14 @@ int main()
     if (connfd < 0)
     {
         printf("server accept failed...\n");
-        exit(0);
+        stop_exit();
     }
     else
         printf("server accept the client...\n");
-  
+
     // Function for chatting between client and server
     pthread_t tid;
-    pthread_create(&tid,NULL,thread,NULL);
+    pthread_create(&tid, NULL, thread, NULL);
     func(connfd, file, addr);
 
     // After chatting close the socket
