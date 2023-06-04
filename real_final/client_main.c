@@ -42,11 +42,11 @@ void linux_like_control()
 
 		if (strncmp(string, "./left", 6) == 0)
 		{
-			to_send = 3;
+			to_send = 2;
 		}
 		else if (strncmp(string, "./right", 7) == 0)
 		{
-			to_send = 2;
+			to_send = 3;
 		}
 		else if (strncmp(string, "./forward", 9) == 0)
 		{
@@ -157,11 +157,11 @@ void get_arrows(int client_socket)
 					break;
 				case 67: // Right arrow
 					printf("Right arrow pressed\n");
-					to_send = 2;
+					to_send = 3;
 					break;
 				case 68: // Left arrow
 					printf("Left arrow pressed\n");
-					to_send = 3;
+					to_send = 2;
 					break;
 				default:
 					break;

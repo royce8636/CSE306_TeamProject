@@ -86,10 +86,12 @@ int main()
     printf("Server connected\n");
 
     int frame_cnt = 0;
-    clock_t start_time = clock();
-    clock_t prev_time = start_time;
 
     bool quit = false;
+    uint32_t start_time = SDL_GetTicks();
+    uint32_t prev_time = start_time;
+    uint32_t cur_time;
+
     while (!quit)
     {
         struct jpeg_decompress_struct cinfo;
@@ -169,13 +171,12 @@ int main()
         free(buffer);
 
         frame_cnt++;
-        clock_t cur_time = clock();
-        double elapsedSeconds = (double)(cur_time - prev_time) / CLOCKS_PER_SEC;
-        if (elapsedSeconds >= 1.0)
+        cur_time = SDL_GetTicks();
+        double elapsedSeconds = (double)(cur_time - prev_time) / 1000.0;
+        if (elapsedSeconds >= 5.0)
         {
             double fps = frame_cnt / elapsedSeconds;
-            printf("FPS: %.2f\r", fps);
-            fflush(stdout);
+            printf("FPS: %.2f\n", fps);
             frame_cnt = 0;
             prev_time = cur_time;
         }
