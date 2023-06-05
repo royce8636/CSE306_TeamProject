@@ -1,8 +1,0 @@
-git clone https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library.git
-
-cd Adafruit-PWM-Servo-Driver-Library/
-
-gcc -o servo_demo servo_demo.c Adafruit_PWMServoDriver.c -lwiringPi -lm
-
-sudo apt-get update
-sudo apt-get install build-essential
