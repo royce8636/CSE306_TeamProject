@@ -1,4 +1,4 @@
-# CSE304 Team Project - RC Car only for computer engineers
+# CSE306 Team Project - RC Car only for computer engineers
 
 ## Execution
 - **Raspberry Pi**: make clean, make. On separate shell, run ```sudo ./main```, ```./cam```. 
