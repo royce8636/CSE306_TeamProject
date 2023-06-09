@@ -17,14 +17,17 @@
 
 int sockfd;
 int old_flags = 0;
+int linux_like = 0;
 struct termios old_term;
 
 // [Error Handler] CTRL C로 프로그램 끝내면 socket다 닫고 끝내기
 void sigint_handler(int sig)
 {
 	close(sockfd);
-	tcsetattr(STDIN_FILENO, TCSANOW, &old_term); // terminal 다시 원상복구
-	fcntl(STDIN_FILENO, F_SETFL, old_flags);
+	if (linux_like == 0){
+		tcsetattr(STDIN_FILENO, TCSANOW, &old_term); // terminal 다시 원상복구
+		fcntl(STDIN_FILENO, F_SETFL, old_flags);
+	}
 	printf("Ending client\n");
 	exit(0);
 }
@@ -129,8 +132,8 @@ void get_arrows(int client_socket)
 	struct termios new_term;
 	tcgetattr(STDIN_FILENO, &old_term); // 현재 터미널 attribute
 	new_term = old_term;
-	new_term.c_lflag &= ~(ICANON | ECHO);		 // 터미널 canonical mode에 둠 (바로바로 input 가져옴)
-	tcsetattr(STDIN_FILENO, TCSANOW, &new_term); // 세팅 지금 적용
+	new_term.c_lflag &= ~(ICANON | ECHO);	// 터미널 non-canonical mode에 둠 (바로바로 input 가져옴), remove echo
+	tcsetattr(STDIN_FILENO, TCSANOW, &new_term); // 세팅 적용
 
 	old_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, old_flags | O_NONBLOCK); // read() is non blocking
@@ -228,6 +231,7 @@ int main(int argc, char *argv[])
 	else if (strcmp(argv[1], "hard") == 0)
 	{
 		linux_like_control();
+		linux_like = 1;
 	}
 	else
 	{
